@@ -89,7 +89,7 @@ class Shell:
         for i in range(0, len(contours)):
             rect = cv.minAreaRect(contours[i])  # пытаемся вписать прямоугольник
             area = int(rect[1][0] * rect[1][1])  # вычисление площади
-            if area > 500:
+            if area > 100:
                 cv.fillPoly(image, [contours[number]], (0, 255, 255))
                 cv.imwrite('3.jpg', image)
                 return image, contours[number]
