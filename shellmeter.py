@@ -4,6 +4,7 @@ import serial
 import cv2 as cv
 import numpy as np
 
+
 class GRBL:
     def __init__(self, port: str):
         self.port_name = port
@@ -26,7 +27,7 @@ class GRBL:
 
 
 class Camera:
-    def __init__(self, url: str, m_w:float, m_h:float, f:float, d:float):
+    def __init__(self, url: str, m_w: float, m_h: float, f: float, d: float):
         self.capture = cv.VideoCapture(url)
         self.focus = f
         self.distance = d
@@ -42,6 +43,7 @@ class Camera:
     def close_camera(self):
         self.capture.release()
         cv.destroyAllWindows()
+
 
 class Shell:
     """Shell"""
@@ -67,30 +69,39 @@ class Shell:
             file2.write(str(phi) + '\n')
         file1.close()
         file2.close()
-        cv.circle(self.raw_image, self.fig_center_px, 15, (255, 0, 0), -1, cv.LINE_AA)
-        cv.circle(self.raw_image, self.image_center_px, 15, (0, 255, 0), -1, cv.LINE_AA)
+        cv.circle(self.raw_image, self.fig_center_px, 15, (255, 0, 0), -1,
+                  cv.LINE_AA)
+        cv.circle(self.raw_image, self.image_center_px, 15, (0, 255, 0), -1,
+                  cv.LINE_AA)
         cv.imwrite('2.jpg', self.raw_image)
         self.resolution_x, self.resolution_y = self.pix2mm(camera)
-        self.image_center_mm = self.image_center_px[0] * self.resolution_x, self.image_center_px[1] * self.resolution_y
-        self.fig_center_mm = self.fig_center_px[0] * self.resolution_x, self.fig_center_px[1] * self.resolution_y
+        self.image_center_mm = self.image_center_px[0] * self.resolution_x, \
+                               self.image_center_px[1] * self.resolution_y
+        self.fig_center_mm = self.fig_center_px[0] * self.resolution_x, \
+                             self.fig_center_px[1] * self.resolution_y
 
     @staticmethod
     def find_contour(image: np.array, number: int):
         test_image = image.copy()
         image = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
-        ret, thresh = cv.threshold(image.copy(), 225, 255, cv.THRESH_BINARY)
+        ret, thresh = cv.threshold(image.copy(), 200, 255, cv.THRESH_BINARY)
         cv.imwrite('thresh.jpg', thresh)
-        contours, hierarchy = cv.findContours(thresh.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+        contours, hierarchy = cv.findContours(thresh.copy(), cv.RETR_TREE,
+                                              cv.CHAIN_APPROX_NONE)
         image = cv.cvtColor(image, cv.COLOR_GRAY2BGR)
-        for i in contours:
-            test_image1 = test_image.copy()
-            cv.fillPoly(test_image1, [i], (0, 255, 255))
-            cv.imwrite(str(i)+'test.jpg', test_image1)
+
+        test_image1 = test_image.copy()
+        cv.drawContours(test_image1, contours, -1, (255, 0, 0), 3,
+                        cv.LINE_AA,
+                        hierarchy, 1)
+        cv.imwrite('test.jpg', test_image1)
         for i in range(0, len(contours)):
-            rect = cv.minAreaRect(contours[i])  # пытаемся вписать прямоугольник
+            rect = cv.minAreaRect(
+                contours[i])  # пытаемся вписать прямоугольник
             area = int(rect[1][0] * rect[1][1])  # вычисление площади
-            if area > 100:
+            if area > 500:
                 cv.fillPoly(image, [contours[number]], (0, 255, 255))
+
                 cv.imwrite('3.jpg', image)
                 return image, contours[number]
 
