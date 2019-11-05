@@ -15,3 +15,8 @@ class Controller(object):
         command = f'G01 X{x} Y{y} F1000\n'
         command = command.encode('ASCII')
         self.controller.write(command)
+
+    def go_home(self):
+        command = f'G01 X0 Y0 F1000\n'
+        command = command.encode('ASCII')
+        self.controller.write(command)
