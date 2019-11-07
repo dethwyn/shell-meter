@@ -6,7 +6,7 @@ import numpy as np
 import serial
 from dotenv import load_dotenv
 
-from shellmeter import GRBL, Camera, Shell
+from shellmeter import GRBL, Camera
 
 load_dotenv()
 logging.basicConfig(filename='main.log', level=logging.INFO)
@@ -22,8 +22,4 @@ martix_height = float(os.getenv('MATRIX_HEIGHT'))
 # grbl.move_to_xy(30, 30)
 # grbl.disconnect()
 camera = Camera(camera_url, matrix_width, martix_height, focus, distance)
-# cv.imwrite('1.jpg', camera.get_frame())
-# logging.info('Camera ready')
-shell = Shell(file_name='1.jpg', camera=camera, contour_pos=1)
-
-#print(shell.fig_center_px)
+cv.imwrite('1.jpg', camera.get_frame())
