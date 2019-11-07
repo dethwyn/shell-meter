@@ -1,4 +1,4 @@
-from math import tan, atan, sqrt, pow
+from math import tan, atan, sqrt, pow, pi
 
 import serial
 import cv2 as cv
@@ -49,21 +49,21 @@ class Shell:
         self.name = n
         self.camera = cam
         self.image = img
-        cv.imwrite(self.name+'_source.jpg', self.image)
+        cv.imwrite(self.name + '_source.jpg', self.image)
         self.img_contour, self.contour = self.fill_contour()
-        cv.imwrite(self.name+'_contour.jpg', self.img_contour)
+        cv.imwrite(self.name + '_contour.jpg', self.img_contour)
         self.shell_c = self.find_center()
 
         self.width, self.height, _ = self.image.shape
         self.img_c = int(self.height / 2), int(self.width / 2)
         img = self.image.copy()
-        cv.circle(img, self.shell_c, 30, (255, 0, 0), -1, cv.LINE_AA)
-        cv.circle(img, self.img_c, 30, (0, 255, 0), -1, cv.LINE_AA)
-        cv.imwrite(self.name+'_centers.jpg', img)
+        cv.circle(img, self.shell_c, 10, (255, 0, 0), -1, cv.LINE_AA)
+        cv.circle(img, self.img_c, 10, (0, 255, 0), -1, cv.LINE_AA)
+        cv.imwrite(self.name + '_centers.jpg', img)
         self.res_x, self.res_y = self.pix2mm()
         c1 = self.img_c[0] * self.res_x, self.img_c[1] * self.res_y
-        c2= self.shell_c[0] * self.res_x, self.shell_c[1] * self.res_y
-        self.shell_c_mm = c2[0]-c1[0], (c2[1]-c1[1])*(-1)
+        c2 = self.shell_c[0] * self.res_x, self.shell_c[1] * self.res_y
+        self.shell_c_mm = c2[0] - c1[0], (c2[1] - c1[1]) * (-1)
 
     def fill_contour(self):
         img = self.image.copy()
@@ -101,6 +101,10 @@ class Shell:
     def pix2mm(self):
         aov_x = 2 * atan(self.camera.matrix_width / (2 * self.camera.focus))
         aov_y = 2 * atan(self.camera.matrix_height / (2 * self.camera.focus))
+        print(aov_x, aov_y)
+        aov_x = 71 * pi / 180.0
+        aov_y = 58 * pi / 180.0
+        print(aov_x, aov_y)
         fov_x = 2 * tan(aov_x / 2) * self.camera.distance
         fov_y = 2 * tan(aov_y / 2) * self.camera.distance
         mm_in_px_x = fov_x / self.width
