@@ -19,21 +19,25 @@ distance = float(os.getenv('DISTANCE'))
 matrix_width = float(os.getenv('MATRIX_WIDTH'))
 matrix_height = float(os.getenv('MATRIX_HEIGHT'))
 
-# grbl = GRBL(port_name)
-# grbl.move_to_xy(30, 30)
-# grbl.disconnect()
 camera = Camera(camera_url, matrix_width, matrix_height, focus, distance)
-for i in range(0,6):
-    cv.imwrite('source'+str(i)+'.png', camera.get_frame())
-# img = camera.get_frame()
-# shell1 = Shell(camera, img, '4')
-# print(shell1.shell_c_mm)
-# grbl = GRBL(port_name)
-# grbl.move_to_xy(int(shell1.shell_c_mm[0]), int(shell1.shell_c_mm[1]))
-# time.sleep(120)
-# img = camera.get_frame()
-# shell2 = Shell(camera, img, '2')
-# print(shell2.shell_c_mm)
-# grbl.go_home()
-# time.sleep(120)
-# grbl.disconnect()
+img = cv.imread('source.jpg')
+shell = Shell(camera, img.copy(), '0')
+logging.info(str(shell.shell_c))
+
+"""
+grbl = GRBL(port_name)
+i = 0
+while(True):
+    camera = Camera(camera_url, matrix_width, matrix_height, focus, distance)
+    img = camera.get_frame()
+    shell = Shell(camera, img.copy(), str(i))
+    x = int(shell.shell_c_mm[0])
+    y = int(shell.shell_c_mm[1])
+    print(x, y)
+    if x>=-2 and x <=2 and y >= -2 and y <=2:
+        break
+    grbl.move_x(x)
+    time.sleep(10)
+    grbl.move_y(y)
+    time.sleep(10)
+"""
