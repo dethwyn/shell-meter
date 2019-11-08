@@ -3,6 +3,8 @@ import time
 import serial
 import cv2 as cv
 import numpy as np
+import matplotlib.pylab
+from matplotlib import mlab
 
 
 class GRBL:
@@ -25,14 +27,22 @@ class GRBL:
         self.controller.write(command)
 
     def move_x(self, x: int):
-        command = f'G21G91G1X{x}F5000\n'
+        command = f'G21G91G1X{x}F1000\n'
         command = command.encode('ASCII')
         self.controller.write(command)
+        t = 4
+        if x >= 26:
+            t = (x - 25.6) / 16.6 + 4
+        time.sleep(t)
 
     def move_y(self, y: int):
-        command = f'G21G91G1Y{y}F5000\n'
+        command = f'G21G91G1Y{y}F1000\n'
         command = command.encode('ASCII')
         self.controller.write(command)
+        t = 4
+        if y >= 26:
+            t = (y - 25.6) / 16.6 + 4
+        time.sleep(t)
 
 
 class Camera:
@@ -45,8 +55,6 @@ class Camera:
 
     def get_frame(self) -> np.numarray:
         ret, frame = self.capture.read()
-        # frame = cv.resize(frame, None, fx=0.5, fy=0.5,
-        #                   interpolation=cv.INTER_CUBIC)
         return frame
 
     def close_camera(self):
@@ -56,15 +64,10 @@ class Camera:
 
 class Shell:
     def __init__(self, cam: Camera, img: np.numarray, n: str):
-        t1 = time.time()
         self.name = n
         self.camera = cam
         self.image = img.copy()
-        """
-        self.image = cv.resize(self.image, None, fx=0.5, fy=0.5,
-                               interpolation=cv.INTER_CUBIC)
-        """
-        self.img_contour, self.contour = self.fill_contour()
+        self.img_contour, self.contour = self.find_contour()
         self.shell_c = self.find_center()
         self.shell_c = int(self.shell_c[0]), int(self.shell_c[1])
         self.width, self.height, _ = self.image.shape
@@ -77,9 +80,8 @@ class Shell:
         c1 = self.img_c[0] * self.res_x, self.img_c[1] * self.res_y
         c2 = self.shell_c[0] * self.res_x, self.shell_c[1] * self.res_y
         self.shell_c_mm = c2[0] - c1[0], (c2[1] - c1[1]) * (-1)
-        print(time.time() - t1)
 
-    def fill_contour(self):
+    def find_contour(self):
         img = self.image.copy()
         blur = cv.blur(img.copy(), (4, 4))
         img_gray = cv.cvtColor(blur.copy(), cv.COLOR_RGB2GRAY)
@@ -94,7 +96,6 @@ class Shell:
             if next_area > area:
                 area = next_area
                 contour_index = i
-        print(area, contour_index)
         cv.fillPoly(img, [contours[contour_index]], (0, 255, 255))
         return img, contours[contour_index]
 
@@ -122,3 +123,18 @@ class Shell:
         mm_in_px_x = 0.69
         mm_in_px_y = 0.69
         return mm_in_px_x, mm_in_px_y
+
+    def draw_profiloram(self):
+        r = []
+        phi = []
+        angle = 0
+        step = 360 / len(self.contour)
+        print(step)
+        for c in self.contour:
+            x = self.shell_c[0] - c[0][0]
+            y = self.shell_c[1] - c[0][1]
+            r.append(sqrt(x * x + y * y)*self.res_x)
+            phi.append(angle)
+            angle += step
+        matplotlib.pylab.plot(phi, r)
+        matplotlib.pylab.savefig('profilogram.png')

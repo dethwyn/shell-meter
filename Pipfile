@@ -9,6 +9,7 @@ verify_ssl = true
 python-dotenv = "*"
 pyserial = "*"
 opencv-python = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.7"
