@@ -4,7 +4,6 @@ import serial
 import cv2 as cv
 import numpy as np
 import matplotlib.pylab
-from matplotlib import mlab
 
 
 class GRBL:
@@ -12,6 +11,7 @@ class GRBL:
         self.port_name = port
         self.controller = serial.Serial(self.port_name, 115200)
         self.controller.readline()
+        self.x, self.y = 0, 0
 
     def disconnect(self):
         self.controller.close()
@@ -20,9 +20,10 @@ class GRBL:
         command = f'G90 X{x} Y{y}\n'
         command = command.encode('ASCII')
         self.controller.write(command)
+        self.x, self.y = x, y
 
     def go_home(self):
-        command = f'G01 X0 Y0 F10000\n'
+        command = f'G90 G0 X0 Y0\n'
         command = command.encode('ASCII')
         self.controller.write(command)
 
@@ -30,6 +31,7 @@ class GRBL:
         command = f'G21G91G1X{x}F1000\n'
         command = command.encode('ASCII')
         self.controller.write(command)
+        self.x += x
         t = 4
         if x >= 26:
             t = (x - 25.6) / 16.6 + 4
@@ -39,6 +41,7 @@ class GRBL:
         command = f'G21G91G1Y{y}F1000\n'
         command = command.encode('ASCII')
         self.controller.write(command)
+        self.y += y
         t = 4
         if y >= 26:
             t = (y - 25.6) / 16.6 + 4
@@ -129,11 +132,10 @@ class Shell:
         phi = []
         angle = 0
         step = 360 / len(self.contour)
-        print(step)
         for c in self.contour:
             x = self.shell_c[0] - c[0][0]
             y = self.shell_c[1] - c[0][1]
-            r.append(sqrt(x * x + y * y)*self.res_x)
+            r.append(sqrt(x * x + y * y) * self.res_x)
             phi.append(angle)
             angle += step
         matplotlib.pylab.plot(phi, r)

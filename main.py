@@ -29,18 +29,23 @@ def main():
         camera = Camera(camera_url, matrix_width, matrix_height, focus,
                         distance)
         img = camera.get_frame()
+        print(f'Step #{i}')
         shell = Shell(camera, img.copy(), str(i))
         x = int(shell.shell_c_mm[0])
         y = int(shell.shell_c_mm[1])
-        print(x, y)
+        print(f'Center in x = {x}; y = {y}')
         if -2 <= x <= 2 and -2 <= y <= 2:
+            print('Center found')
+            print('Drawing profilogram')
             shell.draw_profiloram()
             break
         grbl.move_x(x)
         grbl.move_y(y)
         i += 1
+    print('Well done!')
+    print('Go home')
     grbl.go_home()
-    time.sleep(60)
+    time.sleep(30)
     grbl.disconnect()
 
 
