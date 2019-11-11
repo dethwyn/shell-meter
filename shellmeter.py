@@ -1,5 +1,7 @@
 from math import tan, atan, sqrt, pow, pi
 import time
+import urllib.request
+
 import serial
 import cv2 as cv
 import numpy as np
@@ -57,7 +59,7 @@ class Camera:
         self.matrix_height = m_h
 
     def get_frame(self) -> np.numarray:
-        ret, frame = self.capture.read()
+        _, frame = self.capture.read()
         return frame
 
     def close_camera(self):
