@@ -10,6 +10,7 @@ python-dotenv = "*"
 pyserial = "*"
 opencv-python = "*"
 matplotlib = "*"
+scipy = "*"
 
 [requires]
 python_version = "3.7"

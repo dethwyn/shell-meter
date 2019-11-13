@@ -21,10 +21,15 @@ matrix_width = float(os.getenv('MATRIX_WIDTH'))
 matrix_height = float(os.getenv('MATRIX_HEIGHT'))
 
 
-def main():
-
-
+def test():
     grbl = GRBL(port_name)
+
+
+def main_cycle():
+    grbl = GRBL(port_name)
+    print('Setup system in center')
+    grbl.move_to_xy(int(grbl.max_x / 2), int(grbl.max_y / 2))
+    print('Start to find center')
     i = 0
     full_time = 0
     while (True):
@@ -33,7 +38,7 @@ def main():
         camera = Camera(camera_url, matrix_width, matrix_height, focus,
                         distance)
         img = camera.get_frame()
-        shell = Shell(camera, img.copy(), str(i))
+        shell = Shell(camera, img, str(i))
         x = int(shell.shell_c_mm[0])
         y = int(shell.shell_c_mm[1])
         print(f'Center in x = {x}; y = {y}')
@@ -49,11 +54,10 @@ def main():
         print(f'Step #{i} successfully completed in {t2 - t1} seconds')
         i += 1
     print(f'Well done! Full time = {full_time} seconds')
-    print('Go home')
     grbl.go_home()
-    time.sleep(30)
     grbl.disconnect()
 
 
 if __name__ == "__main__":
-    main()
+    # test()
+    main_cycle()

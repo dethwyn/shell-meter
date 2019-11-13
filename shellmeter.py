@@ -1,52 +1,99 @@
-from math import tan, atan, sqrt, pow, pi
+from math import tan, atan, sqrt, pow, pi, fabs
 import time
-import urllib.request
 
 import serial
 import cv2 as cv
 import numpy as np
-import matplotlib.pylab
+import matplotlib.pyplot as plt
+from scipy.interpolate import CubicSpline
 
 
 class GRBL:
     def __init__(self, port: str):
+        self.max_x = 470
+        self.max_y = 370
+        self.min_x = 0
+        self.min_y = 0
+
         self.port_name = port
         self.controller = serial.Serial(self.port_name, 115200)
         self.controller.readline()
+        self.controller.readline()
+        self.controller.readline()
         self.x, self.y = 0, 0
+        self.go_home()
 
     def disconnect(self):
         self.controller.close()
 
     def move_to_xy(self, x: float, y: float):
+        tx, ty = 0, 0
+        if fabs(x) >= 26:
+            tx = (fabs(x) - 25.6) / 16.6 + 4
+        if fabs(y) >= 26:
+            ty = (fabs(y) - 25.6) / 16.6 + 4
+        print(f'Move x in {x}; y in {y}')
         command = f'G90 X{x} Y{y}\n'
         command = command.encode('ASCII')
         self.controller.write(command)
         self.x, self.y = x, y
+        time.sleep(max([tx, ty]))
 
     def go_home(self):
+        print('Finding home...')
+        command = f'$H\n'
+        command = command.encode('ASCII')
+        self.controller.write(command)
+
+        self.controller.readline()
+        print('Home found!')
+
+    def go_x0y0(self):
+        tx, ty = 0, 0
+        if fabs(self.x) >= 26:
+            tx = (fabs(self.x) - 25.6) / 16.6 + 4
+        if fabs(self.y) >= 26:
+            ty = (fabs(self.y) - 25.6) / 16.6 + 4
+        print('Move x in 0; y in 0')
         command = f'G90 G0 X0 Y0\n'
         command = command.encode('ASCII')
         self.controller.write(command)
+        time.sleep(max([tx, ty]))
 
     def move_x(self, x: int):
+        if self.x + x >= self.max_x:
+            x = self.max_x - self.x
+            self.x += x
+        elif self.x + x <= self.min_x:
+            x = self.min_x - self.x
+            self.x += x
+        else:
+            self.x += x
+        t = 4
+        if fabs(x) >= 26:
+            t = (fabs(x) - 25.6) / 16.6 + 4
+        print(f'Move x in {x}...')
         command = f'G21G91G1X{x}F1000\n'
         command = command.encode('ASCII')
         self.controller.write(command)
-        self.x += x
-        t = 4
-        if x >= 26:
-            t = (x - 25.6) / 16.6 + 4
         time.sleep(t)
 
     def move_y(self, y: int):
+        if self.y + y >= self.max_y:
+            y = self.max_y - self.y
+            self.y += y
+        elif self.y + y <= self.min_y:
+            y = self.min_y - self.y
+            self.y += y
+        else:
+            self.y += y
+        t = 4
+        if fabs(y) >= 26:
+            t = (fabs(y) - 25.6) / 16.6 + 4
+        print(f'Move y in {y}...')
         command = f'G21G91G1Y{y}F1000\n'
         command = command.encode('ASCII')
         self.controller.write(command)
-        self.y += y
-        t = 4
-        if y >= 26:
-            t = (y - 25.6) / 16.6 + 4
         time.sleep(t)
 
 
@@ -71,16 +118,16 @@ class Shell:
     def __init__(self, cam: Camera, img: np.numarray, n: str):
         self.name = n
         self.camera = cam
-        self.image = img.copy()
+        self.image = img
         self.img_contour, self.contour = self.find_contour()
         self.shell_c = self.find_center()
         self.shell_c = int(self.shell_c[0]), int(self.shell_c[1])
         self.width, self.height, _ = self.image.shape
         self.img_c = int(self.height / 2), int(self.width / 2)
-        img = self.image.copy()
-        cv.circle(img, self.shell_c, 10, (255, 0, 0), -1, cv.LINE_AA)
-        cv.circle(img, self.img_c, 10, (0, 255, 0), -1, cv.LINE_AA)
-        cv.imwrite(self.name + '_centers.jpg', img)
+        cv.circle(self.image, self.shell_c, 10, (255, 0, 0), -1, cv.LINE_AA)
+        cv.circle(self.image, self.img_c, 10, (0, 255, 0), -1, cv.LINE_AA)
+        cv.imwrite(self.name + '_centers.jpg', self.image)
+        cv.imwrite(self.name + '_contour.jpg', self.img_contour)
         self.res_x, self.res_y = self.pix2mm()
         c1 = self.img_c[0] * self.res_x, self.img_c[1] * self.res_y
         c2 = self.shell_c[0] * self.res_x, self.shell_c[1] * self.res_y
@@ -90,7 +137,8 @@ class Shell:
         img = self.image.copy()
         blur = cv.blur(img.copy(), (4, 4))
         img_gray = cv.cvtColor(blur.copy(), cv.COLOR_RGB2GRAY)
-        _, thresh = cv.threshold(img_gray.copy(), 180, 255, cv.THRESH_BINARY)
+        _, thresh = cv.threshold(img_gray.copy(), 160, 255, cv.THRESH_BINARY)
+        cv.imwrite(self.name + '_thresh.jpg', thresh)
         contours, _ = cv.findContours(thresh.copy(), cv.RETR_TREE,
                                       cv.CHAIN_APPROX_NONE)
         area = 0
@@ -119,26 +167,28 @@ class Shell:
         return int(ix / area), int(iy / area)
 
     def pix2mm(self):
-        aov_x = 2 * atan(self.camera.matrix_width / (2 * self.camera.focus))
-        aov_y = 2 * atan(self.camera.matrix_height / (2 * self.camera.focus))
-        aov_x = 71 * pi / 180.0
-        aov_y = 58 * pi / 180.0
-        fov_x = 2 * tan(aov_x / 2) * self.camera.distance
-        fov_y = 2 * tan(aov_y / 2) * self.camera.distance
-        mm_in_px_x = 0.69
-        mm_in_px_y = 0.69
-        return mm_in_px_x, mm_in_px_y
+        m = self.camera.matrix_width
+        d = self.camera.distance
+        f = self.camera.focus
+        fov = (m * d) / f
+        res = self.width/fov
+        return res, res
 
     def draw_profiloram(self):
         r = []
         phi = []
-        angle = 0
+        angle = 1.0
+        i = 0
         step = 360 / len(self.contour)
-        for c in self.contour:
-            x = self.shell_c[0] - c[0][0]
-            y = self.shell_c[1] - c[0][1]
-            r.append(sqrt(x * x + y * y) * self.res_x)
+        for point in self.contour:
+            x = (self.shell_c[0] - point[0][0]) * self.res_x
+            y = (self.shell_c[1] - point[0][1]) * self.res_y
+            i += step
+            r.append(sqrt(x * x + y * y))
             phi.append(angle)
             angle += step
-        matplotlib.pylab.plot(phi, r)
-        matplotlib.pylab.savefig('profilogram.png')
+        plt.plot(phi, r)
+        plt.grid()
+        plt.xlabel('Angle (Degree)')
+        plt.ylabel('Radius (mm)')
+        plt.savefig('profilogram.png')
