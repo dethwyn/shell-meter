@@ -11,6 +11,8 @@ pyserial = "*"
 opencv-python = "*"
 matplotlib = "*"
 scipy = "*"
+face-recognition = "*"
+dlib = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.8.1"

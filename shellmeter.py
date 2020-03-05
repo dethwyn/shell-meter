@@ -1,5 +1,6 @@
 from math import tan, atan, sqrt, pow, pi, fabs
 import time
+import os
 
 import serial
 import cv2 as cv
@@ -127,7 +128,6 @@ class Shell:
         cv.circle(self.image, self.shell_c, 10, (255, 0, 0), -1, cv.LINE_AA)
         cv.circle(self.image, self.img_c, 10, (0, 255, 0), -1, cv.LINE_AA)
         cv.imwrite(self.name + '_centers.jpg', self.image)
-        cv.imwrite(self.name + '_contour.jpg', self.img_contour)
         self.res_x, self.res_y = self.pix2mm()
         c1 = self.img_c[0] * self.res_x, self.img_c[1] * self.res_y
         c2 = self.shell_c[0] * self.res_x, self.shell_c[1] * self.res_y
@@ -138,7 +138,6 @@ class Shell:
         blur = cv.blur(img.copy(), (4, 4))
         img_gray = cv.cvtColor(blur.copy(), cv.COLOR_RGB2GRAY)
         _, thresh = cv.threshold(img_gray.copy(), 160, 255, cv.THRESH_BINARY)
-        cv.imwrite(self.name + '_thresh.jpg', thresh)
         contours, _ = cv.findContours(thresh.copy(), cv.RETR_TREE,
                                       cv.CHAIN_APPROX_NONE)
         area = 0
@@ -171,7 +170,7 @@ class Shell:
         d = self.camera.distance
         f = self.camera.focus
         fov = (m * d) / f
-        res = self.width/fov
+        res = self.width / fov
         return res, res
 
     def draw_profiloram(self):
