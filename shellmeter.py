@@ -137,7 +137,7 @@ class Shell:
         img = self.image.copy()
         blur = cv.blur(img.copy(), (4, 4))
         img_gray = cv.cvtColor(blur.copy(), cv.COLOR_RGB2GRAY)
-        _, thresh = cv.threshold(img_gray.copy(), 160, 255, cv.THRESH_BINARY)
+        _, thresh = cv.threshold(img_gray.copy(), 200, 255, cv.THRESH_BINARY)
         contours, _ = cv.findContours(thresh.copy(), cv.RETR_TREE,
                                       cv.CHAIN_APPROX_NONE)
         area = 0
@@ -176,12 +176,16 @@ class Shell:
     def draw_profiloram(self):
         r = []
         phi = []
+        x_list = []
+        y_list = []
         angle = 1.0
         i = 0
         step = 360 / len(self.contour)
         for point in self.contour:
             x = (self.shell_c[0] - point[0][0]) * self.res_x
             y = (self.shell_c[1] - point[0][1]) * self.res_y
+            x_list.append(x)
+            y_list.append(y)
             i += step
             r.append(sqrt(x * x + y * y))
             phi.append(angle)
@@ -190,4 +194,10 @@ class Shell:
         plt.grid()
         plt.xlabel('Angle (Degree)')
         plt.ylabel('Radius (mm)')
-        plt.savefig('profilogram.png')
+        plt.savefig('profilogram_polar.png')
+        plt.cla()
+        plt.plot(x_list, y_list)
+        plt.grid()
+        plt.xlabel('X (mm)')
+        plt.ylabel('Y (mm)')
+        plt.savefig('profilogram_decart.png')
