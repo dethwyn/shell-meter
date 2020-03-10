@@ -112,7 +112,6 @@ class Camera:
 
     def close_camera(self):
         self.capture.release()
-        cv.destroyAllWindows()
 
 
 class Shell:
@@ -135,10 +134,10 @@ class Shell:
 
     def find_contour(self):
         img = self.image.copy()
-        blur = cv.blur(img.copy(), (4, 4))
-        img_gray = cv.cvtColor(blur.copy(), cv.COLOR_RGB2GRAY)
-        _, thresh = cv.threshold(img_gray.copy(), 200, 255, cv.THRESH_BINARY)
-        contours, _ = cv.findContours(thresh.copy(), cv.RETR_TREE,
+        blur = cv.blur(img, (4, 4))
+        img_gray = cv.cvtColor(blur, cv.COLOR_RGB2GRAY)
+        _, thresh = cv.threshold(img_gray, 200, 255, cv.THRESH_BINARY)
+        contours, _ = cv.findContours(thresh, cv.RETR_TREE,
                                       cv.CHAIN_APPROX_NONE)
         area = 0
         contour_index = 0
