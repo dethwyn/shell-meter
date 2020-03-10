@@ -32,7 +32,7 @@ def main_cycle():
     print('Start to find center')
     i = 0
     full_time = 0
-    while (True):
+    while True:
         print(f'Step #{i}')
         t1 = time.time()
         camera = Camera(camera_url, matrix_width, matrix_height, focus,
