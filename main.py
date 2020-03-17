@@ -2,9 +2,6 @@ import os
 import logging
 import time
 
-import cv2 as cv
-import numpy as np
-import serial
 from dotenv import load_dotenv
 
 from shellmeter import GRBL, Camera, Shell
@@ -42,7 +39,7 @@ def main_cycle():
         x = int(shell.shell_c_mm[0])
         y = int(shell.shell_c_mm[1])
         print(f'Center in x = {x}; y = {y}')
-        if -1 <= x <= 1 and -1 <= y <= 1:
+        if -2 <= x <= 2 and -2 <= y <= 2:
             print('Center found!')
             print('Drawing profilogram...')
             shell.draw_profiloram()
@@ -56,6 +53,10 @@ def main_cycle():
     print(f'Well done! Full time = {full_time} seconds')
     grbl.go_home()
     grbl.disconnect()
+    print(f'left = {shell.dx_min}')
+    print(f'right = {shell.dx_max}')
+    print(f'up = {shell.dy_min}')
+    print(f'down = {shell.dy_max}')
 
 
 if __name__ == "__main__":
