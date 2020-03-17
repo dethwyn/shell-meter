@@ -158,7 +158,7 @@ class Shell:
         img = self.image.copy()
         blur = cv.blur(img, (4, 4))
         img_gray = cv.cvtColor(blur, cv.COLOR_RGB2GRAY)
-        _, thresh = cv.threshold(img_gray, 200, 255, cv.THRESH_BINARY)
+        _, thresh = cv.threshold(img_gray, 190, 255, cv.THRESH_BINARY)
         cv.imwrite(f'{self.name}_thresh.jpg', thresh)
         contours, _ = cv.findContours(thresh, cv.RETR_TREE,
                                       cv.CHAIN_APPROX_NONE)
@@ -186,7 +186,6 @@ class Shell:
 
         first_contour = contours[first_contour_id]
         second_contour = contours[second_contour_id]
-        print(second_contour)
         self.contour_2 = second_contour
         x_list_f, y_list_f = [], []
         x_list_s, y_list_s = [], []
