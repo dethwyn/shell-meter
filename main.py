@@ -11,15 +11,10 @@ logging.basicConfig(filename='main.log', level=logging.INFO)
 
 port_name = os.getenv('PORT_NAME')
 camera_url = os.getenv('CAMERA_URL')
-mjpeg_url = os.getenv('MJPEG_URL')
 focus = float(os.getenv('FOCUS'))
 distance = float(os.getenv('DISTANCE'))
 matrix_width = float(os.getenv('MATRIX_WIDTH'))
 matrix_height = float(os.getenv('MATRIX_HEIGHT'))
-
-
-def test():
-    grbl = GRBL(port_name)
 
 
 def main_cycle():
