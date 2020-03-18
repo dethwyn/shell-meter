@@ -127,7 +127,7 @@ class Shell:
         self.max_x_s, self.max_y_s = 0, 0
         self.contour_2 = 0
         self.img_contour, self.contour_1 = self.find_contour()
-        self.shell_c = self.find_center()
+        self.shell_c = self.find_center(type=1)
         self.shell_c = int(self.shell_c[0]), int(self.shell_c[1])
         self.width, self.height, _ = self.image.shape
         self.img_c = int(self.height / 2), int(self.width / 2)
@@ -204,19 +204,31 @@ class Shell:
         self.min_x_s, self.min_y_s = min(x_list_s), min(y_list_s)
         self.max_x_s, self.max_y_s = max(x_list_s), max(y_list_s)
 
-    def find_center(self):
+    def find_center(self, type=0):
+        t1 = time.time()
         img = self.img_contour
-        ix = 0
-        iy = 0
-        area = cv.contourArea(self.contour_1)
-        x, y, w, h = cv.boundingRect(self.contour_1)
-        for i in range(y, y + h):
-            for j in range(x, x + w):
-                r, g, b = img[i, j][2], img[i, j][1], img[i, j][0]
-                if r >= 250 and g >= 250 and b == 0:
-                    ix += j
-                    iy += i
-        return int(ix / area), int(iy / area)
+        if type == 0:
+            ix = 0
+            iy = 0
+            area = cv.contourArea(self.contour_1)
+            x, y, w, h = cv.boundingRect(self.contour_1)
+            for i in range(y, y + h):
+                for j in range(x, x + w):
+                    r, g, b = img[i, j][2], img[i, j][1], img[i, j][0]
+                    if r >= 250 and g >= 250 and b == 0:
+                        ix += j
+                        iy += i
+            print(f'center find in {time.time()-t1} s')
+            return int(ix / area), int(iy / area)
+        else:
+            hsv = cv.cvtColor(img, cv.COLOR_RGB2HSV)
+            lower = np.array([90, 255, 255])
+            mask = cv.inRange(hsv, lower, lower)
+            m = cv.moments(mask)
+            cx = m['m10'] / m['m00']
+            cy = m['m01'] / m['m00']
+            print(f'center find in {time.time()-t1} s')
+            return int(cx), int(cy)
 
     def pix2mm(self):
         m = self.camera.matrix_width
